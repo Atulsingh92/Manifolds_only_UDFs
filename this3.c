@@ -10,7 +10,7 @@
 #define out3 49
 #define out4 48
 
-#define frelax 0.0000281
+#define frelax 0.00011
 
 #define L 672
 #define Dia 6
@@ -70,7 +70,7 @@ DEFINE_PROFILE(massflux_inlet, thread, position)
 		begin_f_loop(f_upstream, thread_upstream)
 			if PRINCIPAL_FACE_P(f_upstream, thread_upstream)
 			{
-				/F_AREA(Area, f_upstream, thread_upstream);
+				F_AREA(Area, f_upstream, thread_upstream);
 				Amagnitude = NV_MAG(Area);
 				Flux = F_FLUX(f_upstream, thread_upstream) ;
 				mdot_sum += Flux;
@@ -82,10 +82,9 @@ DEFINE_PROFILE(massflux_inlet, thread, position)
 		A_glob =PRF_GRSUM1(A_sum);
 		dens1 = PRF_GRSUM1(dens1);
 		dens1  = dens1 / A_glob ;
-		mdot_glob = PRF_GRSUM1(mdot_sum); 	
+		mdot_glob = PRF_GRSUM1(mdot_sum); 	/*Equivalent to PRF_GRSUM1(Flux*A_glob)*/
 		/*mflux_glob =  mdot_glob / A_glob;*/
 	}
-	
 	else
 	{
 		mdot_glob = 0.0;
@@ -93,13 +92,12 @@ DEFINE_PROFILE(massflux_inlet, thread, position)
 	begin_f_loop(f, thread)
 	{	
 		F_PROFILE(f, thread, position) = mdot_glob;	
+
 	}
 	end_f_loop(f, thread)
-
 	Message0("----------------------------------------------\n");
-	Message0("massflowrate @ # %d is %g\n", zone_ID, mdot_glob);
-	Message0("\n");
-	
+	Message0("massflowrate @ RHS id %d is %g\n", zone_ID, mdot_glob);
+	Message0("\n");		
 }
 
 DEFINE_PROFILE(pressure_outlet, thread, position)
@@ -150,7 +148,7 @@ DEFINE_PROFILE(pressure_outlet, thread, position)
 		Thread* thread_downstream = Lookup_Thread(domain_downstream, ID);
 		Amagnitude = 0.0; 
 		Flux = 0.0;
-		force = 0.0;
+		press = 0.0;
 		PA_sum = 0.0;
 		A_sum = 0.0;	
 		dens = 0.0;
@@ -159,29 +157,29 @@ DEFINE_PROFILE(pressure_outlet, thread, position)
 		begin_f_loop(f_downstream, thread_downstream)
 			if PRINCIPAL_FACE_P(f_downstream, thread_downstream)
 			{	
-				F_AREA(Area, f_downstream, thread_downstream); /*Outputs Area vector*/
-				Amagnitude += NV_MAG(Area);
+				F_AREA(area, f_downstream, thread_downstream); /*Outputs Area vector*/
+				Amagnitude += NV_MAG(area);
 				Flux += F_FLUX(f_downstream, thread_downstream);
-				temp = F_T(f_downstream,thread_downstream);
-				cells = cells + 1.0;
-				force +=  F_P(f_downstream, thread_downstream)*NV_MAG(Area);
+				/*temp = F_T(f_downstream,thread_downstream);
+				cells = cells + 1.0;*/
+				press +=  F_P(f_downstream, thread_downstream);/**NV_MAG(Area);*/
 				dens += F_R(f_downstream, thread_downstream)*NV_MAG(Area);
 			}
 		end_f_loop(f_downstream, thread_downstream)
 
 		A_glob = PRF_GRSUM1(Amagnitude); /*2.7e-5*/
 		Flux  = PRF_GRSUM1(Flux);
-		force = PRF_GRSUM1(force);
+		press = PRF_GRSUM1(press);
 		Density = PRF_GRSUM1(dens);
 		/*temp_sum = PRF_GRSUM1(temp);*/
 		Density = Density / A_glob; /*Is correct!*/
 		/*bulk_temp = temp_sum / cells;*/
-		reynolds = 4*fabs(Flux)/(PI*1e-3*Dia*mu);
+		reynolds = 4*fabs(Flux)/(PI*1e-3*Dia*mu);	
 		velocity = (reynolds*mu)/(Dia*1e-3*Density);
 		/*velocity  = Flux /(Density * A_glob);*/
 		friction_factor = 1/(pow((1.8*log10(reynolds)-1.5),2));
 
-		press_avg = (force/A_glob);/* + (0.5*Density*pow(velocity,2)) - (friction_factor*(L/Dia)*0.5*Density*pow(velocity,2))*frelax;*/
+		press_avg = press+ (0.5*Density*pow(velocity,2)) - (friction_factor*(L/Dia)*0.5*Density*pow(velocity,2));
 	}
 	else
 	{
@@ -195,7 +193,7 @@ DEFINE_PROFILE(pressure_outlet, thread, position)
 	#if !RP_HOST
 	Message0("---------------------------------------------\n");
 	Message0("denisty is %g\n", Density);
-	Message0("Bulk temperature is %g \n", bulk_temp);
+	/*Message0("Bulk temperature is %g \n", bulk_temp);*/
 	Message0("massflowrate at out%d: is %g \n", zone_ID, Flux);
 	Message0("reynolds at %d is %g \n", zone_ID, reynolds);
 	Message0("velocity %d is %g \n", zone_ID, velocity);
