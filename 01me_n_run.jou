@@ -62,12 +62,25 @@ it 50
 /define/user-defined/compiled-function load /home/aus1n19/4pipe3D/L672D6/manifold_w_coupling/libudf
 
 
-/define/boundary-conditions/mass-flow-inlet/in*:* , , , yes yes yes udf massflux_inlet::libudf n , n , n y n n y , ,
-/define/boundary-conditions/mass-flow-inlet inlet_inletmanifold* inlet_inletman* , yes yes no mfi no T_in no , no yes no no yes , ,
-/define/boundary-conditions/pressure-outlet/out*:* , , , yes yes yes udf pressure_outlet::libudf , , , , , , , , , , , , ,
+/define/boundary-conditions/mass-flow-inlet/in4:33 yes yes yes yes udf massflux_inlet::libudf no , no , no yes no no yes , ,
+/define/boundary-conditions/mass-flow-inlet/in3:34 yes yes yes yes udf massflux_inlet::libudf no , no , no yes no no yes , ,
+/define/boundary-conditions/mass-flow-inlet/in2:35 yes yes yes yes udf massflux_inlet::libudf no , no , no yes no no yes , ,
+/define/boundary-conditions/mass-flow-inlet/in1:36 yes yes yes yes udf massflux_inlet::libudf no , no , no yes no no yes , ,
+
+/define/boundary-conditions/pressure-outlet/out1:51 yes yes yes udf pressure_outlet::libudf , , , , , , , , , , , , ,
+/define/boundary-conditions/pressure-outlet/out2:50 yes yes yes udf pressure_outlet::libudf , , , , , , , , , , , , ,
+/define/boundary-conditions/pressure-outlet/out3:49 yes yes yes udf pressure_outlet::libudf , , , , , , , , , , , , ,
+/define/boundary-conditions/pressure-outlet/out4:48 yes yes yes udf pressure_outlet::libudf , , , , , , , , , , , , ,
+
+
+;/define/boundary-conditions/mass-flow-inlet/in4:33 in3:34 in2:35 in1:36 , , , yes yes yes udf massflux_inlet::libudf n , n , n y n n y , ,
+;/define/boundary-conditions/mass-flow-inlet inlet_inletmanifold* inlet_inletman* , yes yes no mfi no T_in no , no yes no no yes , ,
+;/define/boundary-conditions/pressure-outlet/out*:* , , , yes yes yes udf pressure_outlet::libudf , , , , , , , , , , , , ,
+;/define/boundary-conditions/pressure-outlet outlet_outmanifold:32 yes no , no , no yes no no yes , , yes no no no
 ;/define/boundary-conditions/pressure-outlet outlet_outmanifold* outlet_outman* , , no , , , , , , , yes , , , , , ,
 ;/define/boundary-conditions/pressure-outlet outlet_outmanifold:32 , , , , , , , , , , , , , , , yes , mfi no , , ,
-/define/boundary-conditions/pressure-outlet outlet_outmanifold:32 yes no , no , no yes no no yes , , yes no no yes no mfi no , no ,
+;/define/boundary-conditions/pressure-outlet outlet_outmanifold:32 yes no , no , no yes no no yes , , yes no no yes no mfi no , no ,
+
 it 600
 
 /file/write-case-data ,
