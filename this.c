@@ -97,48 +97,6 @@ DEFINE_PROFILE(massflux_inlet, thread, position)
 }
 
 
-/*
-double calulateReynolds(Domain *domain , int id)
-{
-	real uc, vc, wc, reynolds;
-    Thread *t;
-    int cells = 0;
-    cell_t c;
-    face_t f;
-    real Amag = 0.0;
-    real Amag_sum;
-    real vmag_glob, flux=0.0;
-    t = Lookup_Thread(domain, id);
-    real NV_VEC(area);
-
-    real vmag, vmag_sum, vmag_total, rho, mu_local;
-    
-    begin_f_loop(f,t)
-    {
-		
-        uc = F_U(f,t); 
-        vc = F_V(f,t); 
-        wc = F_W(f,t);     
-        rho = density;
-        vmag += sqrt(pow(uc,2) + pow(vc,2) + pow(wc,2));
-        flux += F_FLUX(f,t);
-        cells += 1;
-        Amag += NV_MAG(area);
-    }
-    end_f_loop(f,t)
-       
-   Amag_sum  = PRF_GRSUM1(Amag);
-   vmag_sum = PRF_GRSUM1(vmag*Amag_sum);
-    
-    /*vmag_glob = vmag_sum / Amag_sum;
-    vmag_glob = PRF_GRSUM1(flux*Amag_sum)/(Amag_sum*rho* PI *0.25 * pow(Dia,2));
-    
-    reynolds = rho * vmag_glob * Dia / mu ;
-
-    return reynolds;
-    Message0("vmag_glob is %g\n", vmag_glob);
-}
-*/
 
 DEFINE_PROFILE(pressure_outlet, thread, position)
 {
