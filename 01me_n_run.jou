@@ -1,0 +1,90 @@
+file/read-mesh /home/aus1n19/4pipe3D/L672D6/manifold_w_coupling/3Dmanifolds-nopipes.msh
+
+switch-to-solution-mode yes
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; fluent
+
+/mesh/scale 0.001 0.001 0.001
+
+(define mfi 0.00144) 
+(define T_in 373)
+(define T_wall 300)
+(define iter 100)
+
+/define/models/energy? yes yes no
+/define/models/viscous/ke-realizable? yes
+
+/define/materials/change-create air air yes constant 0.9462 yes constant 1011.2185 yes constant 0.0316 yes constant 2.18e-5 no no no
+
+
+; change type
+/define/boundary-conditions/modify-zones/zone-type in*:* , , mass-flow-inlet
+/define/boundary-conditions/modify-zones/zone-type out*:* , , pressure-outlet
+
+/define/boundary-conditions/mass-flow-inlet inlet_inletmanifold* inlet_inletman* , yes yes no mfi no T_in no , no yes no no yes , ,
+/define/boundary-conditions/mass-flow-inlet in*:* in*:* , yes yes no mfi no T_in no , no yes no no yes , ,
+
+; change the T_in value from the tube calculation.
+solve/set/p-v-coupling 20
+
+/solve/set/discretization-scheme epsilon 1
+/solve/set/discretization-scheme k 1
+/solve/set/discretization-scheme pressure 14
+
+/solve/monitors/residual check-convergence? no no no no no no no
+q
+
+/solve/set/number-of-iterations iter
+
+
+/solve/report-definitions/add p_LHS surface-areaavg surface-names out1:* out2:* out3:* out4:* , field total-pressure report-type surface-areaavg per-surface? yes
+q
+/solve/report-definitions/add p_RHS surface-areaavg surface-names in1:* in2:* in3:* in4:* , field total-pressure report-type surface-areaavg per-surface? yes
+q
+
+/solve/report-definitions/add t_bulk surface-areaavg surface-names in1:* in2:* in3:* in4:* , field total-temperature report-type surface-areaavg per-surface? yes
+q
+/solve/report-files/add t_bulk file-name tout.xy itr-index 1 name tout.xy report-defs t_bulk , frequency 1
+q
+/solve/report-files/add p_RHS file-name pRHS.xy itr-index 1 name pRHS.xy report-defs p_RHS , frequency 1
+q
+/solve/report-files/add p_LHS file-name pLHS.xy itr-index 1 name pLHS.xy report-defs p_LHS , frequency 1
+q
+
+/solve/initialize/initialize-flow
+
+it 50
+
+;/file/write-case-data %i
+
+;import and build a udf
+/define/user-defined/compiled-function compile libudf yes /home/aus1n19/4pipe3D/L672D6/manifold_w_coupling/this3.c , ,
+/define/user-defined/compiled-function load /home/aus1n19/4pipe3D/L672D6/manifold_w_coupling/libudf
+
+
+/define/boundary-conditions/mass-flow-inlet/in*:* , , , yes yes yes udf massflux_inlet::libudf n , n , n y n n y , ,
+/define/boundary-conditions/mass-flow-inlet inlet_inletmanifold* inlet_inletman* , yes yes no mfi no T_in no , no yes no no yes , ,
+/define/boundary-conditions/pressure-outlet/out*:* , , , yes yes yes udf pressure_outlet::libudf , , , , , , , , , , , , ,
+;/define/boundary-conditions/pressure-outlet outlet_outmanifold* outlet_outman* , , no , , , , , , , yes , , , , , ,
+;/define/boundary-conditions/pressure-outlet outlet_outmanifold:32 , , , , , , , , , , , , , , , yes , mfi no , , ,
+/define/boundary-conditions/pressure-outlet outlet_outmanifold:32 yes no , no , no yes no no yes , , yes no no yes no mfi no , no ,
+it 600
+
+/file/write-case-data ,
+
+/display/save-picture residual%i.jpg
+
+
+/report/surface-integrals/area-weighted-avg in1:* in2:* in3:* in4:* , total-pressure yes awa-ptot-inlets.srp
+/report/surface-integrals/area-weighted-avg in1:* in2:* in3:* in4:* , velocity-magnitude yes awa-vmag-inlets.srp
+/report/surface-integrals/area-weighted-avg out1:* out2:* out3:* out4:* , total-pressure yes awa-ptot-outlets.srp
+/report/surface-integrals/area-weighted-avg out1:* out2:* out3:* out4:* , velocity-magnitude yes awa-vmag-out1.srp
+/report/surface-integrals/area-weighted-avg in1:* in2:* in3:* in4:* , total-temperature yes awa-temp-tot-inlets.srp
+/report/surface-integrals/area-weighted-avg out1:* out2:* out3:* out4:* , total-temperature yes awa-temp-tot-outlets.srp
+
+/report/fluxes/mass-flow no in1:* in2:* in3:* in4:* out1:* out2:* out3:* out4:* , yes mdot.srp
+
+exit
+ok
+ok
+
